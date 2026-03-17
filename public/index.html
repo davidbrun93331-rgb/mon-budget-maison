@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notre Budget Maison</title>
+    <style>
+        header {
+            position: fixed; top: 0; left: 0; width: 100%;
+            background: #2980b9; color: white; text-align: center;
+            padding: 5px 0; font-size: 1.5rem; font-weight: bold;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 1000;
+        }
+
+        body { 
+            font-family: sans-serif; background: #f0f2f5; 
+            padding: 65px 15px 15px 15px; margin: 0; font-size: 1.1rem;
+        }
+
+        .card { background: white; padding: 15px; border-radius: 10px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        
+        .main-layout { display: flex; flex-direction: column; gap: 5px; }
+        
+        @media (min-width: 1000px) {
+            .main-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        }
+
+        .resume-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .full-width { grid-column: span 2; }
+        .label { font-size: 0.8rem; color: #666; text-transform: uppercase; font-weight: bold; }
+        .sub-label { font-size: 0.7rem; color: #888; font-weight: normal; text-transform: none; }
+        .value { font-size: 1.3rem; font-weight: bold; }
+        .blue { color: #2980b9; } .green { color: #27ae60; } .red { color: #e74c3c; } .orange { color: #e67e22; }
+
+        .gauge-box { background: white; border: 1px solid #ddd; border-radius: 6px; overflow: hidden; position: relative; height: 45px; margin-bottom: 8px; }
+        .gauge-label { position: absolute; top: 3px; left: 8px; font-size: 0.75rem; font-weight: bold; z-index: 2; color: #444; }
+        .gauge-pct { color: #e74c3c; font-size: 0.7rem; margin-left: 5px; }
+        .gauge-value { position: absolute; bottom: 3px; right: 8px; font-size: 0.95rem; font-weight: bold; z-index: 2; }
+        .gauge-bar { position: absolute; top: 0; left: 0; height: 100%; background: rgba(231, 76, 60, 0.15); border-right: 2px solid #e74c3c; z-index: 1; }
+
+        h1 { font-size: 1rem; margin: 0 0 10px 0; color: #333; display: flex; justify-content: space-between; border-bottom: 1px solid #f0f0f0; padding-bottom: 5px; }
+        input, select, button { width: 100%; padding: 12px; margin: 5px 0; border: 1px solid #ccc; border-radius: 5px; font-size: 1rem; }
+        button { background: #2980b9; color: white; border: none; font-weight: bold; cursor: pointer; }
+        
+        .row-item { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #eee; font-size: 0.95rem; }
+        .histo-item { display: flex; align-items: center; padding: 8px 0; border-bottom: 1px solid #eee; }
+        .histo-check { width: 18px; height: 18px; margin-right: 10px; }
+        .histo-info { flex-grow: 1; font-size: 0.9rem; line-height: 1.2; }
+        .time-badge { font-size: 0.65rem; background: #eee; padding: 2px 5px; border-radius: 4px; color: #666; margin-left: 5px; }
+        
+        .scroll-area { max-height: 350px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+
+    <header>Notre Budget Maison</header>
+
+    <div class="main-layout">
+        
+        <div class="card">
+            <h1>Résumé Financier</h1>
+            <div class="resume-grid">
+                <div class="full-width" style="border-bottom: 1px solid #eee; padding-bottom: 6px;">
+                    <div class="label">Solde Global</div>
+                    <div class="value blue" id="solde">0€</div>
+                </div>
+                <div><div class="label">Recettes</div><div class="value green" id="total-r">0€</div></div>
+                <div><div class="label">Dépenses</div><div class="value red" id="total-d">0€</div></div>
+                <div class="full-width" style="margin-top: 10px; padding-top: 6px; border-top: 1px solid #eee;">
+                    <div class="label">Budget Hebdo Restant <span id="label-dimanche" class="sub-label"></span></div>
+                    <div class="value orange" id="budget-hebdo">0€</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h1>Ajouter / Rectifier</h1>
+            <input type="hidden" id="edit-id">
+            <input type="date" id="date-ope">
+            <input type="text" id="lib" placeholder="Libellé">
+            <input type="number" id="mnt" placeholder="Montant" step="0.01">
+            <select id="cat">
+                <option value="Recette">💰 Recette</option>
+                <option value="Remboursements">📩 Remboursements</option>
+                <option value="Alimentaire">🛒 Alimentaire</option>
+                <option value="Frais de fonctionnement">🏠 Frais de fonctionnement</option>
+                <option value="Loisirs">🎉 Loisirs</option>
+                <option value="Exceptionnelle">⚠️ Exceptionnelle</option>
+                <option value="Carburant">⛽ Carburant</option>
+                <option value="Santé">🏥 Santé</option>
+            </select>
+            <button id="btn-valider" onclick="valider()">Enregistrer</button>
+            <button id="btn-annuler" style="display:none; background:#95a5a5;" onclick="resetForm()">Annuler</button>
+        </div>
+
+        <div class="card">
+            <h1>Jauges & Pourcentages</h1>
+            <div id="gauge-container"></div>
+        </div>
+
+        <div class="card">
+            <h1>Analyse par Libellé</h1>
+            <div id="details-lib" class="scroll-area"></div>
+        </div>
+
+        <div class="card">
+            <h1>Historique <button id="btn-del-multi" onclick="supprimerSelection()" style="display:none; width:auto; padding:4px 8px; font-size:0.7rem; background:#ff4757; margin:0;">Supprimer</button></h1>
+            <div id="historique" class="scroll-area"></div>
+        </div>
+
+    </div>
+
+    <script>
+        function setDates() { document.getElementById('date-ope').valueAsDate = new Date(); }
+
+        async function load() {
+            const rStats = await fetch('/api/stats');
+            const d = await rStats.json();
+            const rHisto = await fetch('/api/historique');
+            const docs = await rHisto.json();
+
+            const rec = (d['Recette'] || 0) + (d['Remboursements'] || 0);
+            const catsDepNames = ["Alimentaire", "Frais de fonctionnement", "Loisirs", "Exceptionnelle", "Carburant", "Santé"];
+            const dep = catsDepNames.reduce((s, k) => s + (d[k] || 0), 0);
+            const solde = rec - dep;
+
+            document.getElementById('total-r').innerText = rec.toFixed(0) + "€";
+            document.getElementById('total-d').innerText = dep.toFixed(0) + "€";
+            document.getElementById('solde').innerText = solde.toFixed(2) + "€";
+            
+            const aujourdhui = new Date();
+            const rest = (new Date(aujourdhui.getFullYear(), aujourdhui.getMonth() + 1, 0).getDate() - aujourdhui.getDate()) + 1;
+            const parJour = solde / rest;
+            
+            // Calcul du dimanche de la semaine en cours
+            const jourSemaine = aujourdhui.getDay(); // 0 = Dimanche, 1 = Lundi...
+            const diff = jourSemaine === 0 ? 0 : (7 - jourSemaine);
+            const dimanche = new Date(aujourdhui);
+            dimanche.setDate(aujourdhui.getDate() + diff);
+            const dateDimStr = dimanche.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
+            
+            document.getElementById('label-dimanche').innerText = `(le dimanche ${dateDimStr})`;
+
+            const joursSemRestants = jourSemaine === 0 ? 1 : (7 - jourSemaine + 1);
+            document.getElementById('budget-hebdo').innerText = (parJour * Math.min(joursSemRestants, rest)).toFixed(2) + "€";
+
+            let gaugeHtml = "";
+            catsDepNames.forEach(name => {
+                const montant = d[name] || 0;
+                const pourcentage = rec > 0 ? ((montant / rec) * 100).toFixed(1) : 0;
+                gaugeHtml += `<div class="gauge-box"><div class="gauge-label">${name} <span class="gauge-pct">(${pourcentage}%)</span></div><div class="gauge-bar" style="width: ${Math.min(pourcentage, 100)}%"></div><div class="gauge-value">${montant.toFixed(0)}€</div></div>`;
+            });
+            document.getElementById('gauge-container').innerHTML = gaugeHtml;
+
+            const libelles = {};
+            docs.forEach(doc => { if (catsDepNames.includes(doc.categorie)) { libelles[doc.libelle] = (libelles[doc.libelle] || 0) + parseFloat(doc.montant); } });
+            document.getElementById('details-lib').innerHTML = Object.keys(libelles).sort().map(l => `<div class="row-item"><span>${l}</span><b>${libelles[l].toFixed(2)}€</b></div>`).join('') || "Vide";
+
+            document.getElementById('historique').innerHTML = docs.map(doc => {
+                const timeMatch = doc.libelle.match(/\[(\d{2}:\d{2})\]/);
+                const displayLib = timeMatch ? doc.libelle.replace(timeMatch[0], '') : doc.libelle;
+                const timeTag = timeMatch ? `<span class="time-badge">${timeMatch[1]}</span>` : '';
+                return `<div class="histo-item">
+                    <input type="checkbox" class="histo-check" value="${doc._id}" onclick="verifierSelection()">
+                    <div class="histo-info"><b>${displayLib}</b> ${timeTag} (${doc.montant}€)<br><small>${doc.date}</small></div>
+                    <button class="btn-edit" style="background:#f1c40f; color:black; width:auto; padding:4px 8px; font-size:0.8rem;" onclick="preparerModif('${doc._id}', '${doc.libelle}', ${doc.montant}, '${doc.categorie}', '${doc.date}')">✏️</button>
+                </div>`;
+            }).join('');
+        }
+
+        function verifierSelection() {
+            const num = document.querySelectorAll('.histo-check:checked').length;
+            document.getElementById('btn-del-multi').style.display = num > 0 ? "inline-block" : "none";
+        }
+
+        async function supprimerSelection() {
+            if(confirm("Supprimer la sélection ?")) {
+                for(let cb of document.querySelectorAll('.histo-check:checked')) { await fetch('/api/transaction/' + cb.value, { method: 'DELETE' }); }
+                load();
+            }
+        }
+
+        async function valider() {
+            const id = document.getElementById('edit-id').value;
+            let libelle = document.getElementById('lib').value;
+            const montant = document.getElementById('mnt').value;
+            const categorie = document.getElementById('cat').value;
+            const date = document.getElementById('date-ope').value;
+
+            if(!libelle || !montant) return;
+
+            if(!id) {
+                const maintenant = new Date();
+                const heure = maintenant.getHours().toString().padStart(2, '0') + ":" + maintenant.getMinutes().toString().padStart(2, '0');
+                libelle = `[${heure}] ${libelle}`;
+            }
+
+            const body = { date, libelle, montant, categorie };
+            await fetch(id ? '/api/transaction/'+id : '/api/transaction', { 
+                method: id ? 'PUT' : 'POST', 
+                headers: {'Content-Type': 'application/json'}, 
+                body: JSON.stringify(body) 
+            });
+            resetForm(); load();
+        }
+
+        function preparerModif(id, lib, mnt, cat, date) {
+            document.getElementById('edit-id').value = id;
+            document.getElementById('lib').value = lib;
+            document.getElementById('mnt').value = mnt;
+            document.getElementById('cat').value = cat;
+            document.getElementById('date-ope').value = date;
+            document.getElementById('btn-valider').innerText = "Mettre à jour";
+            document.getElementById('btn-annuler').style.display = "block";
+            window.scrollTo(0,0);
+        }
+
+        function resetForm() {
+            document.getElementById('edit-id').value = "";
+            document.getElementById('lib').value = "";
+            document.getElementById('mnt').value = "";
+            setDates();
+            document.getElementById('btn-valider').innerText = "Enregistrer";
+            document.getElementById('btn-annuler').style.display = "none";
+        }
+
+        setDates(); load();
+    </script>
+</body>
+</html>
