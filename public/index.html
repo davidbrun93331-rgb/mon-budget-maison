@@ -294,7 +294,7 @@
         </div>
         
         <div class="form-group" id="libelle-personnalise" style="display:none;">
-            <input type="text" id="lib-custom" placeholder="Libellé personnalisé">
+            <input type="text" id="lib-custom" placeholder="Saisissez votre libellé ici">
         </div>
         
         <div class="form-group"><input type="number" id="mnt" placeholder="Montant (€)" step="0.01"></div>
@@ -338,34 +338,47 @@
 
 <script>
     // Gestion de l'affichage du champ personnalisé
-    document.getElementById('lib-select').addEventListener('change', function() {
-        const customDiv = document.getElementById('libelle-personnalise');
+    const libSelect = document.getElementById('lib-select');
+    const libellePersonnalise = document.getElementById('libelle-personnalise');
+    const libCustom = document.getElementById('lib-custom');
+
+    libSelect.addEventListener('change', function() {
         if (this.value === 'Autre') {
-            customDiv.style.display = 'block';
+            libellePersonnalise.style.display = 'block';
+            libCustom.focus();
         } else {
-            customDiv.style.display = 'none';
-            document.getElementById('lib-custom').value = '';
+            libellePersonnalise.style.display = 'none';
+            libCustom.value = '';
         }
     });
 
     function getLibelle() {
-        const select = document.getElementById('lib-select');
-        if (select.value === 'Autre') {
-            return document.getElementById('lib-custom').value.trim() || '';
+        if (libSelect.value === 'Autre') {
+            const customValue = libCustom.value.trim();
+            if (!customValue) {
+                alert("Veuillez saisir un libellé");
+                return null;
+            }
+            return customValue;
         }
-        return select.value;
+        if (!libSelect.value) {
+            alert("Veuillez choisir un libellé");
+            return null;
+        }
+        return libSelect.value;
     }
 
     function setLibelle(value) {
-        const select = document.getElementById('lib-select');
-        const optionExists = Array.from(select.options).some(opt => opt.value === value);
+        // Vérifier si le libellé est dans la liste prédéfinie
+        const optionExists = Array.from(libSelect.options).some(opt => opt.value === value);
         if (optionExists && value !== 'Autre') {
-            select.value = value;
-            document.getElementById('libelle-personnalise').style.display = 'none';
+            libSelect.value = value;
+            libellePersonnalise.style.display = 'none';
+            libCustom.value = '';
         } else {
-            select.value = 'Autre';
-            document.getElementById('libelle-personnalise').style.display = 'block';
-            document.getElementById('lib-custom').value = value;
+            libSelect.value = 'Autre';
+            libellePersonnalise.style.display = 'block';
+            libCustom.value = value;
         }
     }
 
@@ -379,7 +392,6 @@
         const rHisto = await fetch('/api/historique');
         const docs = await rHisto.json();
 
-        // Les dépenses fixes sont maintenant dans la catégorie "Dépense fixe"
         const rec = (d['Recette'] || 0) + (d['Remboursements'] || 0);
         const catsDepNames = ["Alimentaire", "Frais de fonctionnement", "Loisirs", "Exceptionnelle", "Carburant", "Santé", "Dépense fixe"];
         const dep = catsDepNames.reduce((s, k) => s + (d[k] || 0), 0);
@@ -418,14 +430,22 @@
         });
         document.getElementById('gauge-container').innerHTML = gaugeHtml;
 
+        // Analyse par libellé : regroupement des libellés identiques (sans l'heure)
         const libelles = {};
         docs.forEach(doc => {
             if (catsDepNames.includes(doc.categorie)) {
-                libelles[doc.libelle] = (libelles[doc.libelle] || 0) + parseFloat(doc.montant);
+                // Extraire le libellé sans l'heure (format [HH:MM])
+                let libellePur = doc.libelle.replace(/^\[[\d:]+\]\s*/, '');
+                libelles[libellePur] = (libelles[libellePur] || 0) + parseFloat(doc.montant);
             }
         });
-        document.getElementById('details-lib').innerHTML = Object.keys(libelles).sort().map(l => `<div class="row-item"><span>${l}</span><strong>${libelles[l].toFixed(2)}€</strong></div>`).join('') || "<div style='color:#94a3b8; text-align:center;'>Aucune dépense pour le moment</div>";
+        
+        document.getElementById('details-lib').innerHTML = Object.keys(libelles)
+            .sort()
+            .map(l => `<div class="row-item"><span>${l}</span><strong>${libelles[l].toFixed(2)}€</strong></div>`)
+            .join('') || "<div style='color:#94a3b8; text-align:center;'>Aucune dépense pour le moment</div>";
 
+        // Historique : affichage détaillé
         document.getElementById('historique').innerHTML = docs.map(doc => {
             const timeMatch = doc.libelle.match(/\[(\d{2}:\d{2})\]/);
             const displayLib = timeMatch ? doc.libelle.replace(timeMatch[0], '') : doc.libelle;
@@ -459,12 +479,14 @@
     async function valider() {
         const id = document.getElementById('edit-id').value;
         let libelle = getLibelle();
+        if (!libelle) return; // L'alerte est déjà dans getLibelle
+        
         const montant = document.getElementById('mnt').value;
         const categorie = document.getElementById('cat').value;
         const date = document.getElementById('date-ope').value;
 
-        if(!libelle || !montant) {
-            alert("Veuillez remplir le libellé et le montant");
+        if(!montant) {
+            alert("Veuillez saisir un montant");
             return;
         }
 
@@ -499,9 +521,9 @@
 
     function resetForm() {
         document.getElementById('edit-id').value = "";
-        document.getElementById('lib-select').value = "";
-        document.getElementById('libelle-personnalise').style.display = "none";
-        document.getElementById('lib-custom').value = "";
+        libSelect.value = "";
+        libellePersonnalise.style.display = "none";
+        libCustom.value = "";
         document.getElementById('mnt').value = "";
         setDates();
         document.getElementById('btn-valider').innerText = "💾 Enregistrer";
@@ -513,3 +535,4 @@
 </script>
 </body>
 </html>
+
