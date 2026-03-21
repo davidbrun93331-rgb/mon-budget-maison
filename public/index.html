@@ -2,83 +2,304 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Notre Budget Maison</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Budget Maison</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif;
+            background: #f8fafc;
+            padding: 80px 20px 40px;
+            color: #1e293b;
+        }
+
         header {
-            position: fixed; top: 0; left: 0; width: 100%;
-            background: #2980b9; color: white; text-align: center;
-            padding: 5px 0; font-size: 1.5rem; font-weight: bold;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 1000;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: linear-gradient(135deg, #1e3c72 0%, #2b4c7c 100%);
+            backdrop-filter: blur(10px);
+            color: white;
+            text-align: center;
+            padding: 16px 0;
+            font-size: 1.5rem;
+            font-weight: 600;
+            letter-spacing: -0.3px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
         }
 
-        body { 
-            font-family: sans-serif; background: #f0f2f5; 
-            padding: 65px 15px 15px 15px; margin: 0; font-size: 1.1rem;
+        .dashboard {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            gap: 24px;
         }
 
-        .card { background: white; padding: 15px; border-radius: 10px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        
-        .main-layout { display: flex; flex-direction: column; gap: 5px; }
-        
-        @media (min-width: 1000px) {
-            .main-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .card {
+            background: white;
+            border-radius: 24px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.03);
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 1px solid #eef2f6;
         }
 
-        .resume-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .full-width { grid-column: span 2; }
-        .label { font-size: 0.8rem; color: #666; text-transform: uppercase; font-weight: bold; }
-        .sub-label { font-size: 0.7rem; color: #888; font-weight: normal; text-transform: none; }
-        .value { font-size: 1.3rem; font-weight: bold; }
-        .blue { color: #2980b9; } .green { color: #27ae60; } .red { color: #e74c3c; } .orange { color: #e67e22; }
+        .card:hover {
+            box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.1);
+        }
 
-        .gauge-box { background: white; border: 1px solid #ddd; border-radius: 6px; overflow: hidden; position: relative; height: 45px; margin-bottom: 8px; }
-        .gauge-label { position: absolute; top: 3px; left: 8px; font-size: 0.75rem; font-weight: bold; z-index: 2; color: #444; }
-        .gauge-pct { color: #e74c3c; font-size: 0.7rem; margin-left: 5px; }
-        .gauge-value { position: absolute; bottom: 3px; right: 8px; font-size: 0.95rem; font-weight: bold; z-index: 2; }
-        .gauge-bar { position: absolute; top: 0; left: 0; height: 100%; background: rgba(231, 76, 60, 0.15); border-right: 2px solid #e74c3c; z-index: 1; }
+        .card h2 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #eef2f6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #0f172a;
+        }
 
-        h1 { font-size: 1rem; margin: 0 0 10px 0; color: #333; display: flex; justify-content: space-between; border-bottom: 1px solid #f0f0f0; padding-bottom: 5px; }
-        input, select, button { width: 100%; padding: 12px; margin: 5px 0; border: 1px solid #ccc; border-radius: 5px; font-size: 1rem; }
-        button { background: #2980b9; color: white; border: none; font-weight: bold; cursor: pointer; }
-        
-        .row-item { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #eee; font-size: 0.95rem; }
-        .histo-item { display: flex; align-items: center; padding: 8px 0; border-bottom: 1px solid #eee; }
-        .histo-check { width: 18px; height: 18px; margin-right: 10px; }
-        .histo-info { flex-grow: 1; font-size: 0.9rem; line-height: 1.2; }
-        .time-badge { font-size: 0.65rem; background: #eee; padding: 2px 5px; border-radius: 4px; color: #666; margin-left: 5px; }
-        
-        .scroll-area { max-height: 350px; overflow-y: auto; }
+        .resume-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .stat-card {
+            background: #f1f5f9;
+            border-radius: 20px;
+            padding: 16px;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .stat-card .label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+            color: #475569;
+        }
+
+        .stat-card .value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-top: 8px;
+        }
+
+        .green { color: #10b981; }
+        .red { color: #ef4444; }
+        .blue { color: #3b82f6; }
+        .orange { color: #f97316; }
+
+        .full-width {
+            grid-column: span 2;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        input, select, button {
+            width: 100%;
+            padding: 12px 16px;
+            font-size: 0.95rem;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            background: white;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        button {
+            background: #3b82f6;
+            color: white;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.05s;
+        }
+
+        button:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        .btn-secondary {
+            background: #94a3b8;
+        }
+
+        .btn-secondary:hover {
+            background: #64748b;
+        }
+
+        .gauge-item {
+            margin-bottom: 16px;
+        }
+
+        .gauge-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+
+        .gauge-bar-bg {
+            background: #e2e8f0;
+            border-radius: 20px;
+            height: 10px;
+            overflow: hidden;
+        }
+
+        .gauge-bar-fill {
+            background: #f97316;
+            width: 0%;
+            height: 100%;
+            border-radius: 20px;
+            transition: width 0.3s ease;
+        }
+
+        .histo-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .histo-check {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .histo-info {
+            flex: 1;
+            font-size: 0.9rem;
+        }
+
+        .histo-info strong {
+            font-weight: 600;
+        }
+
+        .time-badge {
+            background: #f1f5f9;
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 30px;
+            margin-left: 8px;
+        }
+
+        .btn-edit {
+            background: #f59e0b;
+            padding: 6px 12px;
+            border-radius: 40px;
+            font-size: 0.75rem;
+            width: auto;
+        }
+
+        .scroll-area {
+            max-height: 320px;
+            overflow-y: auto;
+            padding-right: 6px;
+        }
+
+        .row-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 800px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            body {
+                padding: 80px 16px 32px;
+            }
+        }
     </style>
 </head>
 <body>
 
-    <header>Notre Budget Maison</header>
+<header>🏠 Budget Maison</header>
 
-    <div class="main-layout">
-        
-        <div class="card">
-            <h1>Résumé Financier</h1>
-            <div class="resume-grid">
-                <div class="full-width" style="border-bottom: 1px solid #eee; padding-bottom: 6px;">
-                    <div class="label">Solde Global</div>
-                    <div class="value blue" id="solde">0€</div>
-                </div>
-                <div><div class="label">Recettes</div><div class="value green" id="total-r">0€</div></div>
-                <div><div class="label">Dépenses</div><div class="value red" id="total-d">0€</div></div>
-                <div class="full-width" style="margin-top: 10px; padding-top: 6px; border-top: 1px solid #eee;">
-                    <div class="label">Budget Hebdo Restant <span id="label-dimanche" class="sub-label"></span></div>
-                    <div class="value orange" id="budget-hebdo">0€</div>
-                </div>
+<div class="dashboard">
+    
+    <div class="card">
+        <h2>📊 Vue d'ensemble</h2>
+        <div class="resume-grid">
+            <div class="stat-card full-width">
+                <div class="label">Solde global</div>
+                <div class="value blue" id="solde">0€</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Revenus</div>
+                <div class="value green" id="total-r">0€</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Dépenses</div>
+                <div class="value red" id="total-d">0€</div>
+            </div>
+            <div class="stat-card full-width">
+                <div class="label">Budget hebdo restant <span id="label-dimanche" style="font-weight:normal;"></span></div>
+                <div class="value orange" id="budget-hebdo">0€</div>
             </div>
         </div>
+    </div>
 
-        <div class="card">
-            <h1>Ajouter / Rectifier</h1>
-            <input type="hidden" id="edit-id">
-            <input type="date" id="date-ope">
-            <input type="text" id="lib" placeholder="Libellé">
-            <input type="number" id="mnt" placeholder="Montant" step="0.01">
+    <div class="card">
+        <h2>✏️ Ajouter / Modifier</h2>
+        <input type="hidden" id="edit-id">
+        <div class="form-group"><input type="date" id="date-ope"></div>
+        
+        <div class="form-group">
+            <select id="lib-select">
+                <option value="">-- Choisir un libellé --</option>
+                <option value="Sami">Sami</option>
+                <option value="Lidl">Lidl</option>
+                <option value="Carrefour">Carrefour</option>
+                <option value="Auchan">Auchan</option>
+                <option value="Super U">Super U</option>
+                <option value="Action">Action</option>
+                <option value="Stockomani">Stockomani</option>
+                <option value="Leroy Merlin">Leroy Merlin</option>
+                <option value="Brico Dépôt">Brico Dépôt</option>
+                <option value="Ikea">Ikea</option>
+                <option value="Véli">Véli</option>
+                <option value="Autre">Autre (saisie libre)</option>
+            </select>
+        </div>
+        
+        <div class="form-group" id="libelle-personnalise" style="display:none;">
+            <input type="text" id="lib-custom" placeholder="Libellé personnalisé">
+        </div>
+        
+        <div class="form-group"><input type="number" id="mnt" placeholder="Montant (€)" step="0.01"></div>
+        
+        <div class="form-group">
             <select id="cat">
                 <option value="Recette">💰 Recette</option>
                 <option value="Remboursements">📩 Remboursements</option>
@@ -88,143 +309,207 @@
                 <option value="Exceptionnelle">⚠️ Exceptionnelle</option>
                 <option value="Carburant">⛽ Carburant</option>
                 <option value="Santé">🏥 Santé</option>
+                <option value="Dépense fixe">🏷️ Dépense fixe</option>
             </select>
-            <button id="btn-valider" onclick="valider()">Enregistrer</button>
-            <button id="btn-annuler" style="display:none; background:#95a5a5;" onclick="resetForm()">Annuler</button>
         </div>
-
-        <div class="card">
-            <h1>Jauges & Pourcentages</h1>
-            <div id="gauge-container"></div>
-        </div>
-
-        <div class="card">
-            <h1>Analyse par Libellé</h1>
-            <div id="details-lib" class="scroll-area"></div>
-        </div>
-
-        <div class="card">
-            <h1>Historique <button id="btn-del-multi" onclick="supprimerSelection()" style="display:none; width:auto; padding:4px 8px; font-size:0.7rem; background:#ff4757; margin:0;">Supprimer</button></h1>
-            <div id="historique" class="scroll-area"></div>
-        </div>
-
+        
+        <button id="btn-valider" onclick="valider()">💾 Enregistrer</button>
+        <button id="btn-annuler" style="display:none; margin-top:8px;" class="btn-secondary" onclick="resetForm()">Annuler</button>
     </div>
 
-    <script>
-        function setDates() { document.getElementById('date-ope').valueAsDate = new Date(); }
+    <div class="card">
+        <h2>📈 Répartition des dépenses</h2>
+        <div id="gauge-container"></div>
+    </div>
 
-        async function load() {
-            const rStats = await fetch('/api/stats');
-            const d = await rStats.json();
-            const rHisto = await fetch('/api/historique');
-            const docs = await rHisto.json();
+    <div class="card">
+        <h2>🔍 Analyse par libellé</h2>
+        <div id="details-lib" class="scroll-area"></div>
+    </div>
 
-            const rec = (d['Recette'] || 0) + (d['Remboursements'] || 0);
-            const catsDepNames = ["Alimentaire", "Frais de fonctionnement", "Loisirs", "Exceptionnelle", "Carburant", "Santé"];
-            const dep = catsDepNames.reduce((s, k) => s + (d[k] || 0), 0);
-            const solde = rec - dep;
+    <div class="card">
+        <h2>📜 Historique 
+            <button id="btn-del-multi" onclick="supprimerSelection()" style="display:none; background:#ef4444; padding:6px 12px; font-size:0.7rem;">🗑️ Supprimer</button>
+        </h2>
+        <div id="historique" class="scroll-area"></div>
+    </div>
 
-            document.getElementById('total-r').innerText = rec.toFixed(0) + "€";
-            document.getElementById('total-d').innerText = dep.toFixed(0) + "€";
-            document.getElementById('solde').innerText = solde.toFixed(2) + "€";
-            
-            const aujourdhui = new Date();
-            const rest = (new Date(aujourdhui.getFullYear(), aujourdhui.getMonth() + 1, 0).getDate() - aujourdhui.getDate()) + 1;
-            const parJour = solde / rest;
-            
-            // Calcul du dimanche de la semaine en cours
-            const jourSemaine = aujourdhui.getDay(); // 0 = Dimanche, 1 = Lundi...
-            const diff = jourSemaine === 0 ? 0 : (7 - jourSemaine);
-            const dimanche = new Date(aujourdhui);
-            dimanche.setDate(aujourdhui.getDate() + diff);
-            const dateDimStr = dimanche.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
-            
-            document.getElementById('label-dimanche').innerText = `(le dimanche ${dateDimStr})`;
+</div>
 
-            const joursSemRestants = jourSemaine === 0 ? 1 : (7 - jourSemaine + 1);
-            document.getElementById('budget-hebdo').innerText = (parJour * Math.min(joursSemRestants, rest)).toFixed(2) + "€";
+<script>
+    // Gestion de l'affichage du champ personnalisé
+    document.getElementById('lib-select').addEventListener('change', function() {
+        const customDiv = document.getElementById('libelle-personnalise');
+        if (this.value === 'Autre') {
+            customDiv.style.display = 'block';
+        } else {
+            customDiv.style.display = 'none';
+            document.getElementById('lib-custom').value = '';
+        }
+    });
 
-            let gaugeHtml = "";
-            catsDepNames.forEach(name => {
-                const montant = d[name] || 0;
-                const pourcentage = rec > 0 ? ((montant / rec) * 100).toFixed(1) : 0;
-                gaugeHtml += `<div class="gauge-box"><div class="gauge-label">${name} <span class="gauge-pct">(${pourcentage}%)</span></div><div class="gauge-bar" style="width: ${Math.min(pourcentage, 100)}%"></div><div class="gauge-value">${montant.toFixed(0)}€</div></div>`;
-            });
-            document.getElementById('gauge-container').innerHTML = gaugeHtml;
+    function getLibelle() {
+        const select = document.getElementById('lib-select');
+        if (select.value === 'Autre') {
+            return document.getElementById('lib-custom').value.trim() || '';
+        }
+        return select.value;
+    }
 
-            const libelles = {};
-            docs.forEach(doc => { if (catsDepNames.includes(doc.categorie)) { libelles[doc.libelle] = (libelles[doc.libelle] || 0) + parseFloat(doc.montant); } });
-            document.getElementById('details-lib').innerHTML = Object.keys(libelles).sort().map(l => `<div class="row-item"><span>${l}</span><b>${libelles[l].toFixed(2)}€</b></div>`).join('') || "Vide";
+    function setLibelle(value) {
+        const select = document.getElementById('lib-select');
+        const optionExists = Array.from(select.options).some(opt => opt.value === value);
+        if (optionExists && value !== 'Autre') {
+            select.value = value;
+            document.getElementById('libelle-personnalise').style.display = 'none';
+        } else {
+            select.value = 'Autre';
+            document.getElementById('libelle-personnalise').style.display = 'block';
+            document.getElementById('lib-custom').value = value;
+        }
+    }
 
-            document.getElementById('historique').innerHTML = docs.map(doc => {
-                const timeMatch = doc.libelle.match(/\[(\d{2}:\d{2})\]/);
-                const displayLib = timeMatch ? doc.libelle.replace(timeMatch[0], '') : doc.libelle;
-                const timeTag = timeMatch ? `<span class="time-badge">${timeMatch[1]}</span>` : '';
-                return `<div class="histo-item">
-                    <input type="checkbox" class="histo-check" value="${doc._id}" onclick="verifierSelection()">
-                    <div class="histo-info"><b>${displayLib}</b> ${timeTag} (${doc.montant}€)<br><small>${doc.date}</small></div>
-                    <button class="btn-edit" style="background:#f1c40f; color:black; width:auto; padding:4px 8px; font-size:0.8rem;" onclick="preparerModif('${doc._id}', '${doc.libelle}', ${doc.montant}, '${doc.categorie}', '${doc.date}')">✏️</button>
+    function setDates() {
+        document.getElementById('date-ope').valueAsDate = new Date();
+    }
+
+    async function load() {
+        const rStats = await fetch('/api/stats');
+        const d = await rStats.json();
+        const rHisto = await fetch('/api/historique');
+        const docs = await rHisto.json();
+
+        // Les dépenses fixes sont maintenant dans la catégorie "Dépense fixe"
+        const rec = (d['Recette'] || 0) + (d['Remboursements'] || 0);
+        const catsDepNames = ["Alimentaire", "Frais de fonctionnement", "Loisirs", "Exceptionnelle", "Carburant", "Santé", "Dépense fixe"];
+        const dep = catsDepNames.reduce((s, k) => s + (d[k] || 0), 0);
+        const solde = rec - dep;
+
+        document.getElementById('total-r').innerText = rec.toFixed(0) + "€";
+        document.getElementById('total-d').innerText = dep.toFixed(0) + "€";
+        document.getElementById('solde').innerText = solde.toFixed(2) + "€";
+
+        const aujourdhui = new Date();
+        const rest = (new Date(aujourdhui.getFullYear(), aujourdhui.getMonth() + 1, 0).getDate() - aujourdhui.getDate()) + 1;
+        const parJour = solde / rest;
+        const jourSemaine = aujourdhui.getDay();
+        const diff = jourSemaine === 0 ? 0 : (7 - jourSemaine);
+        const dimanche = new Date(aujourdhui);
+        dimanche.setDate(aujourdhui.getDate() + diff);
+        const dateDimStr = dimanche.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
+        document.getElementById('label-dimanche').innerHTML = `(dimanche ${dateDimStr})`;
+        const joursSemRestants = jourSemaine === 0 ? 1 : (7 - jourSemaine + 1);
+        document.getElementById('budget-hebdo').innerText = (parJour * Math.min(joursSemRestants, rest)).toFixed(2) + "€";
+
+        let gaugeHtml = "";
+        catsDepNames.forEach(name => {
+            const montant = d[name] || 0;
+            const pourcentage = rec > 0 ? ((montant / rec) * 100) : 0;
+            gaugeHtml += `
+                <div class="gauge-item">
+                    <div class="gauge-header">
+                        <span>${name}</span>
+                        <span>${montant.toFixed(0)}€ (${pourcentage.toFixed(1)}%)</span>
+                    </div>
+                    <div class="gauge-bar-bg">
+                        <div class="gauge-bar-fill" style="width: ${Math.min(pourcentage, 100)}%;"></div>
+                    </div>
                 </div>`;
-            }).join('');
-        }
+        });
+        document.getElementById('gauge-container').innerHTML = gaugeHtml;
 
-        function verifierSelection() {
-            const num = document.querySelectorAll('.histo-check:checked').length;
-            document.getElementById('btn-del-multi').style.display = num > 0 ? "inline-block" : "none";
-        }
-
-        async function supprimerSelection() {
-            if(confirm("Supprimer la sélection ?")) {
-                for(let cb of document.querySelectorAll('.histo-check:checked')) { await fetch('/api/transaction/' + cb.value, { method: 'DELETE' }); }
-                load();
+        const libelles = {};
+        docs.forEach(doc => {
+            if (catsDepNames.includes(doc.categorie)) {
+                libelles[doc.libelle] = (libelles[doc.libelle] || 0) + parseFloat(doc.montant);
             }
-        }
+        });
+        document.getElementById('details-lib').innerHTML = Object.keys(libelles).sort().map(l => `<div class="row-item"><span>${l}</span><strong>${libelles[l].toFixed(2)}€</strong></div>`).join('') || "<div style='color:#94a3b8; text-align:center;'>Aucune dépense pour le moment</div>";
 
-        async function valider() {
-            const id = document.getElementById('edit-id').value;
-            let libelle = document.getElementById('lib').value;
-            const montant = document.getElementById('mnt').value;
-            const categorie = document.getElementById('cat').value;
-            const date = document.getElementById('date-ope').value;
+        document.getElementById('historique').innerHTML = docs.map(doc => {
+            const timeMatch = doc.libelle.match(/\[(\d{2}:\d{2})\]/);
+            const displayLib = timeMatch ? doc.libelle.replace(timeMatch[0], '') : doc.libelle;
+            const timeTag = timeMatch ? `<span class="time-badge">${timeMatch[1]}</span>` : '';
+            return `<div class="histo-item">
+                        <input type="checkbox" class="histo-check" value="${doc._id}" onclick="verifierSelection()">
+                        <div class="histo-info">
+                            <strong>${displayLib}</strong> ${timeTag}<br>
+                            <span style="font-size:0.75rem; color:#475569;">${doc.date} · ${doc.montant}€ · ${doc.categorie}</span>
+                        </div>
+                        <button class="btn-edit" onclick="preparerModif('${doc._id}', '${doc.libelle}', ${doc.montant}, '${doc.categorie}', '${doc.date}')">✏️</button>
+                    </div>`;
+        }).join('');
+    }
 
-            if(!libelle || !montant) return;
+    function verifierSelection() {
+        const num = document.querySelectorAll('.histo-check:checked').length;
+        document.getElementById('btn-del-multi').style.display = num > 0 ? "inline-block" : "none";
+    }
 
-            if(!id) {
-                const maintenant = new Date();
-                const heure = maintenant.getHours().toString().padStart(2, '0') + ":" + maintenant.getMinutes().toString().padStart(2, '0');
-                libelle = `[${heure}] ${libelle}`;
+    async function supprimerSelection() {
+        if(confirm("Supprimer les éléments sélectionnés ?")) {
+            for(let cb of document.querySelectorAll('.histo-check:checked')) {
+                await fetch('/api/transaction/' + cb.value, { method: 'DELETE' });
             }
+            load();
+            verifierSelection();
+        }
+    }
 
-            const body = { date, libelle, montant, categorie };
-            await fetch(id ? '/api/transaction/'+id : '/api/transaction', { 
-                method: id ? 'PUT' : 'POST', 
-                headers: {'Content-Type': 'application/json'}, 
-                body: JSON.stringify(body) 
-            });
-            resetForm(); load();
+    async function valider() {
+        const id = document.getElementById('edit-id').value;
+        let libelle = getLibelle();
+        const montant = document.getElementById('mnt').value;
+        const categorie = document.getElementById('cat').value;
+        const date = document.getElementById('date-ope').value;
+
+        if(!libelle || !montant) {
+            alert("Veuillez remplir le libellé et le montant");
+            return;
         }
 
-        function preparerModif(id, lib, mnt, cat, date) {
-            document.getElementById('edit-id').value = id;
-            document.getElementById('lib').value = lib;
-            document.getElementById('mnt').value = mnt;
-            document.getElementById('cat').value = cat;
-            document.getElementById('date-ope').value = date;
-            document.getElementById('btn-valider').innerText = "Mettre à jour";
-            document.getElementById('btn-annuler').style.display = "block";
-            window.scrollTo(0,0);
+        if(!id) {
+            const maintenant = new Date();
+            const heure = maintenant.getHours().toString().padStart(2, '0') + ":" + maintenant.getMinutes().toString().padStart(2, '0');
+            libelle = `[${heure}] ${libelle}`;
         }
 
-        function resetForm() {
-            document.getElementById('edit-id').value = "";
-            document.getElementById('lib').value = "";
-            document.getElementById('mnt').value = "";
-            setDates();
-            document.getElementById('btn-valider').innerText = "Enregistrer";
-            document.getElementById('btn-annuler').style.display = "none";
-        }
+        const body = { date, libelle, montant: parseFloat(montant), categorie };
+        await fetch(id ? '/api/transaction/'+id : '/api/transaction', {
+            method: id ? 'PUT' : 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(body)
+        });
+        resetForm();
+        load();
+    }
 
-        setDates(); load();
-    </script>
+    function preparerModif(id, lib, mnt, cat, date) {
+        // Extraire le libellé sans l'heure
+        const libSansHeure = lib.replace(/^\[[\d:]+\]\s*/, '');
+        document.getElementById('edit-id').value = id;
+        setLibelle(libSansHeure);
+        document.getElementById('mnt').value = mnt;
+        document.getElementById('cat').value = cat;
+        document.getElementById('date-ope').value = date;
+        document.getElementById('btn-valider').innerText = "✏️ Mettre à jour";
+        document.getElementById('btn-annuler').style.display = "block";
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function resetForm() {
+        document.getElementById('edit-id').value = "";
+        document.getElementById('lib-select').value = "";
+        document.getElementById('libelle-personnalise').style.display = "none";
+        document.getElementById('lib-custom').value = "";
+        document.getElementById('mnt').value = "";
+        setDates();
+        document.getElementById('btn-valider').innerText = "💾 Enregistrer";
+        document.getElementById('btn-annuler').style.display = "none";
+    }
+
+    setDates();
+    load();
+</script>
 </body>
 </html>

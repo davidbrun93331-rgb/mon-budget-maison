@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des véhicules</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        h1, h2 { color: #333; }
+        form { margin-bottom: 20px; padding: 15px; background: #fafafa; border-radius: 5px; }
+        label { display: inline-block; width: 150px; margin-top: 5px; }
+        input, select, textarea { padding: 5px; margin: 5px; width: 200px; }
+        button { padding: 5px 10px; background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background: #f2f2f2; }
+        .delete-btn { background: #dc3545; color: white; border: none; padding: 3px 6px; cursor: pointer; }
+        .section { margin-top: 30px; border-top: 2px solid #ccc; padding-top: 20px; }
+        .vehicle-selector { margin: 20px 0; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Gestion des véhicules</h1>
+
+    <!-- Formulaire pour ajouter un véhicule -->
+    <h2>Ajouter un véhicule</h2>
+    <form id="vehicleForm">
+        <label>Immatriculation :</label> <input type="text" id="immat" required><br>
+        <label>Marque / Modèle :</label> <input type="text" id="modele"><br>
+        <label>Kilométrage initial :</label> <input type="number" id="kmInit" required><br>
+        <button type="submit">Ajouter</button>
+    </form>
+
+    <!-- Liste des véhicules -->
+    <h2>Vos véhicules</h2>
+    <table id="vehiclesTable">
+        <thead><tr><th>Immatriculation</th><th>Modèle</th><th>Km initial</th><th>Actions</th>\\</thead>
+        <tbody></tbody>
+    </table>
+
+    <div class="vehicle-selector">
+        <label>Sélectionner un véhicule :</label>
+        <select id="vehicleSelect"></select>
+    </div>
+
+    <!-- Section carburant -->
+    <div class="section" id="fuelSection">
+        <h2>Relevés de carburant</h2>
+        <form id="fuelForm">
+            <input type="hidden" id="fuelVehicleId">
+            <label>Date :</label> <input type="date" id="fuelDate" required><br>
+            <label>Kilométrage :</label> <input type="number" id="fuelKm" required><br>
+            <label>Litres :</label> <input type="number" step="0.01" id="fuelLiters" required><br>
+            <label>Prix par litre (€) :</label> <input type="number" step="0.001" id="fuelPrice" required><br>
+            <button type="submit">Ajouter relevé</button>
+        </form>
+        <table id="fuelTable">
+            <thead><tr><th>Date</th><th>Km</th><th>Litres</th><th>Prix/L</th><th>Montant</th><th>Coût/km (€)</th><th>Coût/100km</th>\\</thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <!-- Section entretien -->
+    <div class="section" id="maintenanceSection">
+        <h2>Entretiens</h2>
+        <form id="maintenanceForm">
+            <input type="hidden" id="maintenanceVehicleId">
+            <label>Date :</label> <input type="date" id="maintenanceDate" required><br>
+            <label>Kilométrage :</label> <input type="number" id="maintenanceKm" required><br>
+            <label>Type :</label>
+            <select id="maintenanceType">
+                <option value="Vidange">Vidange</option>
+                <option value="Freins">Freins</option>
+                <option value="Pneus">Pneus</option>
+                <option value="Courroie">Courroie</option>
+                <option value="Autre">Autre</option>
+            </select><br>
+            <label>Détails :</label> <textarea id="maintenanceDetails" rows="2" cols="30"></textarea><br>
+            <label>Coût (€) :</label> <input type="number" step="0.01" id="maintenanceCost"><br>
+            <button type="submit">Ajouter entretien</button>
+        </form>
+        <table id="maintenanceTable">
+            <thead><tr><th>Date</th><th>Km</th><th>Type</th><th>Détails</th><th>Coût</th>\\</thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    // Récupération des éléments DOM
+    const vehiclesTableBody = document.querySelector('#vehiclesTable tbody');
+    const vehicleSelect = document.getElementById('vehicleSelect');
+    const fuelVehicleId = document.getElementById('fuelVehicleId');
+    const maintenanceVehicleId = document.getElementById('maintenanceVehicleId');
+    const fuelForm = document.getElementById('fuelForm');
+    const maintenanceForm = document.getElementById('maintenanceForm');
+    const fuelTableBody = document.querySelector('#fuelTable tbody');
+    const maintenanceTableBody = document.querySelector('#maintenanceTable tbody');
+
+    let currentVehicleId = null;
+
+    // Fonction pour charger tous les véhicules
+    async function loadVehicles() {
+        const res = await fetch('/api/vehicles');
+        const vehicles = await res.json();
+        vehiclesTableBody.innerHTML = '';
+        vehicleSelect.innerHTML = '<option value="">-- Sélectionner un véhicule --</option>';
+        vehicles.forEach(v => {
+            // Ligne dans le tableau
+            const row = vehiclesTableBody.insertRow();
+            row.insertCell(0).textContent = v.immatriculation;
+            row.insertCell(1).textContent = v.marqueModele || '';
+            row.insertCell(2).textContent = v.kilometrageInitial;
+            const actionsCell = row.insertCell(3);
+            const delBtn = document.createElement('button');
+            delBtn.textContent = 'Supprimer';
+            delBtn.className = 'delete-btn';
+            delBtn.onclick = () => deleteVehicle(v._id);
+            actionsCell.appendChild(delBtn);
+
+            // Option du select
+            const option = document.createElement('option');
+            option.value = v._id;
+            option.textContent = `${v.immatriculation} (${v.marqueModele || ''})`;
+            vehicleSelect.appendChild(option);
+        });
+        if (vehicles.length > 0 && !currentVehicleId) {
+            vehicleSelect.value = vehicles[0]._id;
+            vehicleSelect.dispatchEvent(new Event('change'));
+        }
+    }
+
+    async function deleteVehicle(id) {
+        if (confirm('Supprimer ce véhicule et toutes ses données ?')) {
+            await fetch(`/api/vehicles/${id}`, { method: 'DELETE' });
+            if (currentVehicleId === id) {
+                currentVehicleId = null;
+                fuelTableBody.innerHTML = '';
+                maintenanceTableBody.innerHTML = '';
+            }
+            loadVehicles();
+        }
+    }
+
+    // Chargement des données du véhicule sélectionné
+    async function loadVehicleData(vehicleId) {
+        if (!vehicleId) {
+            fuelTableBody.innerHTML = '';
+            maintenanceTableBody.innerHTML = '';
+            return;
+        }
+        currentVehicleId = vehicleId;
+        fuelVehicleId.value = vehicleId;
+        maintenanceVehicleId.value = vehicleId;
+
+        // Charger les relevés carburant
+        const fuelRes = await fetch(`/api/fuel/${vehicleId}`);
+        const fuels = await fuelRes.json();
+        fuelTableBody.innerHTML = '';
+        fuels.forEach(f => {
+            const row = fuelTableBody.insertRow();
+            row.insertCell(0).textContent = new Date(f.date).toLocaleDateString();
+            row.insertCell(1).textContent = f.kilometrage;
+            row.insertCell(2).textContent = f.litres;
+            row.insertCell(3).textContent = f.prixParLitre;
+            row.insertCell(4).textContent = f.montant?.toFixed(2);
+            row.insertCell(5).textContent = f.coutParKm?.toFixed(4) || '';
+            row.insertCell(6).textContent = f.coutPar100Km?.toFixed(2) || '';
+        });
+
+        // Charger les entretiens
+        const maintRes = await fetch(`/api/maintenance/${vehicleId}`);
+        const maintenances = await maintRes.json();
+        maintenanceTableBody.innerHTML = '';
+        maintenances.forEach(m => {
+            const row = maintenanceTableBody.insertRow();
+            row.insertCell(0).textContent = new Date(m.date).toLocaleDateString();
+            row.insertCell(1).textContent = m.kilometrage;
+            row.insertCell(2).textContent = m.type;
+            row.insertCell(3).textContent = m.details;
+            row.insertCell(4).textContent = m.cout?.toFixed(2);
+        });
+    }
+
+    // Ajout d'un véhicule
+    document.getElementById('vehicleForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const immat = document.getElementById('immat').value;
+        const modele = document.getElementById('modele').value;
+        const kmInit = parseInt(document.getElementById('kmInit').value);
+        await fetch('/api/vehicles', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ immatriculation: immat, marqueModele: modele, kilometrageInitial: kmInit })
+        });
+        document.getElementById('vehicleForm').reset();
+        loadVehicles();
+    });
+
+    // Ajout carburant
+    fuelForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const vehicleId = fuelVehicleId.value;
+        if (!vehicleId) { alert('Sélectionnez un véhicule'); return; }
+        const date = document.getElementById('fuelDate').value;
+        const kilometrage = parseInt(document.getElementById('fuelKm').value);
+        const litres = parseFloat(document.getElementById('fuelLiters').value);
+        const prixParLitre = parseFloat(document.getElementById('fuelPrice').value);
+        const montant = litres * prixParLitre;
+        await fetch('/api/fuel', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ vehicleId, date, kilometrage, litres, prixParLitre, montant })
+        });
+        fuelForm.reset();
+        loadVehicleData(vehicleId);
+    });
+
+    // Ajout entretien
+    maintenanceForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const vehicleId = maintenanceVehicleId.value;
+        if (!vehicleId) { alert('Sélectionnez un véhicule'); return; }
+        const date = document.getElementById('maintenanceDate').value;
+        const kilometrage = parseInt(document.getElementById('maintenanceKm').value);
+        const type = document.getElementById('maintenanceType').value;
+        const details = document.getElementById('maintenanceDetails').value;
+        const cout = parseFloat(document.getElementById('maintenanceCost').value) || 0;
+        await fetch('/api/maintenance', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ vehicleId, date, kilometrage, type, details, cout })
+        });
+        maintenanceForm.reset();
+        loadVehicleData(vehicleId);
+    });
+
+    // Sélection du véhicule dans le dropdown
+    vehicleSelect.addEventListener('change', (e) => {
+        const id = e.target.value;
+        if (id) loadVehicleData(id);
+        else {
+            currentVehicleId = null;
+            fuelTableBody.innerHTML = '';
+            maintenanceTableBody.innerHTML = '';
+        }
+    });
+
+    // Initialisation
+    loadVehicles();
+</script>
+</body>
+</html>
